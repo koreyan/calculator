@@ -90,7 +90,7 @@ func ToPostfix(str string) []int32 { //중위표기식을 후위표기식으로 
 				opStack.Push(v)
 			} else {
 				top, _ := opStack.Peek()
-				for opOder(v) < opOder(top) {
+				for opOder(v) <= opOder(top) {
 					pop, _ := opStack.Pop()
 					postfix = append(postfix, -1)
 					postfix = append(postfix, pop)
@@ -149,10 +149,12 @@ func Calculate(postfix []int32) int32 {
 			oprd2, _ = numStack.Pop()
 			oprd1, _ = numStack.Pop()
 			result = operate(oprd1, oprd2, v)
+			//fmt.Printf("%d %c %d = %d\n", oprd1, v, oprd2, result)
 			numStack.Push(result)
 		} else {
 			numStack.Push(v)
 		}
+
 	}
 	pop, err := numStack.Pop()
 	if err != nil {

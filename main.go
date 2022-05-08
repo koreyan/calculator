@@ -13,7 +13,8 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	exp, err := reader.ReadString('\n')
 	exp = strings.TrimSpace(exp) // 문자열의 쓸모없는 양쪽 공백을 없앰
-	fmt.Println(exp)
+	exp = calc.IsValidInfix(exp)
+	//fmt.Println(exp)
 	if err != nil {
 		panic("수식이 올바르지 않습니다.")
 	}

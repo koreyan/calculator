@@ -8,8 +8,8 @@ type node struct {
 }
 
 type Stack struct {
-	Top  *node
-	Size int
+	top  *node
+	size int
 }
 
 func Error(s string) error {
@@ -17,28 +17,28 @@ func Error(s string) error {
 }
 
 func (stk *Stack) Wsize() int {
-	return stk.Size
+	return stk.size
 }
 
 func (stk *Stack) Peek() (int32, error) {
-	if stk.Size == 0 {
+	if stk.size == 0 {
 		return -1, Error("There is no data")
 	}
-	return stk.Top.data, nil
+	return stk.top.data, nil
 }
 
 func (stk *Stack) Push(newdata int32) {
-	newNode := &node{newdata, stk.Top}
-	stk.Top = newNode
-	stk.Size++
+	newNode := &node{newdata, stk.top}
+	stk.top = newNode
+	stk.size++
 }
 
 func (stk *Stack) Pop() (int32, error) {
-	if stk.Size == 0 {
+	if stk.size == 0 {
 		return -1, Error("There is no data")
 	}
-	temp := stk.Top.data
-	stk.Top = stk.Top.next
-	stk.Size--
+	temp := stk.top.data
+	stk.top = stk.top.next
+	stk.size--
 	return temp, nil
 }

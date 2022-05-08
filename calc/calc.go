@@ -6,7 +6,7 @@ import (
 )
 
 func isOp(o int32) bool {
-	if o == '+' || o == '-' || o == '*' || o == '/' || o == '(' || o == ')' {
+	if o == '+' || o == '-' || o == '*' || o == '/' {
 		return true
 	}
 	return false
@@ -29,7 +29,7 @@ func createnumber(s []int32, combo int) int32 { //배열의 숫자를 하나의 
 }
 
 func opOder(op int32) int {
-	fmt.Printf("%c\n", op)
+	//fmt.Printf("%c\n", op)
 	switch op {
 	case '(':
 		return 0
@@ -49,71 +49,64 @@ func opOder(op int32) int {
 }
 
 func ToPostfix(str string) []int32 { //중위표기식을 후위표기식으로 바꾸는 함수
+	//fmt.Println(str)
 	opStack := new(stack.Stack)
 	numberArr := make([]int32, 100)
 	postfix := make([]int32, 0, 100)
 	var combo int = 0
 
 	for _, v := range str {
+		//fmt.Printf("%c 차례\n\n", v)
 		if v >= '0' && v <= '9' {
 			numberArr[combo] = v
 			combo++
-			fmt.Println(v, "numArr에 임시 저장")
+			//fmt.Println(v, "numArr에 임시 저장")
+		} else if v == '(' {
+			opStack.Push(v)
+		} else if v == ')' {
+			tempnum := createnumber(numberArr, combo)
+			//fmt.Println(tempnum, "숫자 생성")
+			postfix = append(postfix, tempnum) //임시로 저장한 숫자배열을 하나의 숫자로 만들어 저장
+			combo = 0                          //combo 초기화
+
+			pop, _ := opStack.Pop()
+			for pop != '(' {
+				postfix = append(postfix, -1) /* 확인! >> 숫자와 연산자를 구별해주기 위해 -1로 간격을 만듦   <<*/
+				postfix = append(postfix, pop)
+				pop, _ = opStack.Pop()
+			}
+			//fmt.Println("postfix 현황", postfix)
 		} else {
-			if v == ' ' {
-				fmt.Println("공백문자 발생")
-				continue
-			}
-			disting := isOp(v) //연산자인지 검사
-			if disting == false {
-				panic(fmt.Errorf("Invalid operator"))
-			}
-			if v == '(' {
-				opStack.Push(v)
-			} else if v == ')' {
+			if combo != 0 {
 				tempnum := createnumber(numberArr, combo)
-				fmt.Println(tempnum, "숫자 생성")
+				//fmt.Println(tempnum, "숫자 생성")
 				postfix = append(postfix, tempnum) //임시로 저장한 숫자배열을 하나의 숫자로 만들어 저장
 				combo = 0                          //combo 초기화
-
-				pop, _ := opStack.Pop()
-				for pop != '(' {
-					postfix = append(postfix, -1) /* 확인! >> 숫자와 연산자를 구별해주기 위해 -1로 간격을 만듦   <<*/
-					postfix = append(postfix, pop)
-					pop, _ = opStack.Pop()
-				}
-				fmt.Println("postfix 현황", postfix)
+				//fmt.Println("postfix 현황", postfix)
+			}
+			//연산자들 정렬을 stack을 이용하여 처리
+			if opStack.Wsize() == 0 {
+				//fmt.Println("opStack is empty")
+				opStack.Push(v)
 			} else {
-				if combo != 0 {
-					tempnum := createnumber(numberArr, combo)
-					fmt.Println(tempnum, "숫자 생성")
-					postfix = append(postfix, tempnum) //임시로 저장한 숫자배열을 하나의 숫자로 만들어 저장
-					combo = 0                          //combo 초기화
-					fmt.Println("postfix 현황", postfix)
-				}
-				//연산자들 정렬을 stack을 이용하여 처리
-				if opStack.Wsize() == 0 {
-					fmt.Println("opStack is empty")
-					opStack.Push(v)
-				} else {
-					top, _ := opStack.Peek()
-					for opOder(v) < opOder(top) {
-						pop, _ := opStack.Pop()
-						postfix = append(postfix, -1)
-						postfix = append(postfix, pop)
-						if opStack.Wsize() == 0 {
-							break
-						}
-						top, _ = opStack.Peek()
+				top, _ := opStack.Peek()
+				for opOder(v) < opOder(top) {
+					pop, _ := opStack.Pop()
+					postfix = append(postfix, -1)
+					postfix = append(postfix, pop)
+					if opStack.Wsize() == 0 {
+						break
 					}
-					opStack.Push(v)
-
+					top, _ = opStack.Peek()
 				}
+				opStack.Push(v)
+
 			}
 		}
 	}
-
-	postfix = append(postfix, createnumber(numberArr, combo)) //위 알고리즘으로 수식의 맨 뒤 숫자는 postfix에 포함할 수 없으므로 여기서 추가
+	if combo != 0 {
+		postfix = append(postfix, createnumber(numberArr, combo)) //위 알고리즘으로 수식의 맨 뒤 숫자는 postfix에 포함할 수 없으므로 여기서 추가
+	}
 	var temp int32
 	for opStack.Wsize() != 0 {
 		temp, _ = opStack.Pop()
@@ -121,7 +114,7 @@ func ToPostfix(str string) []int32 { //중위표기식을 후위표기식으로 
 		postfix = append(postfix, temp)
 	}
 
-	fmt.Println("최종 postfix", postfix)
+	//fmt.Println("최종 postfix", postfix)
 	return postfix
 }
 
@@ -166,4 +159,49 @@ func Calculate(postfix []int32) int32 {
 		fmt.Println(err)
 	}
 	return pop
+}
+
+func IsValidInfix(infix string) string {
+	fixedExp := make([]rune, 0, 100)
+	parenthesesStack := new(stack.Stack)
+	opCombo := 0
+	if isOp(int32(infix[0])) {
+		panic("Invalid expression! operator is placed at top of expression")
+	}
+
+	for _, v := range infix {
+
+		if v == ' ' {
+			continue
+		}
+
+		if v >= '0' && v <= '9' {
+			fixedExp = append(fixedExp, v)
+			opCombo = 0
+			continue
+		} else if v == '(' {
+			fixedExp = append(fixedExp, v)
+			parenthesesStack.Push(v)
+			opCombo++
+			continue
+		} else if v == ')' {
+
+			p, _ := parenthesesStack.Pop()
+			if p != '(' {
+				panic("Invalid expression!  소괄호의 짝이 맞지 않습니다.")
+			}
+			fixedExp = append(fixedExp, v)
+			continue
+		}
+
+		if isOp(v) && opCombo == 0 {
+			opCombo++
+			fixedExp = append(fixedExp, v)
+
+		} else {
+			panic("Invalid expression! operators are placed consecutively")
+		}
+	}
+	//fmt.Println(fixedExp)
+	return string(fixedExp)
 }
